@@ -2,3 +2,4 @@ streamlit
 python-dotenv
 selenium
 selenium_stealth
+pandas

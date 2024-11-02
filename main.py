@@ -1,5 +1,11 @@
 import streamlit as st
 import time
+from scrapper.scrapper import WebScraper
+import os
+from dotenv import load_dotenv
+import pandas as pd
+# Load environment variables from the home directory
+load_dotenv()
 
 # Setting up title and Necessary Inputs
 st.title("Jiji Web Scrapper LLM")
@@ -9,14 +15,26 @@ st.text("Enter the item you want answers to:")
 item = st.text_input("Enter Item Name")
 if st.button("Scrape Jiji"):
     if item:
-        st.write("Scraping the Jiji For the Required Information...")
+        st.write("Scraping Jiji For the Required Information...")
+        scraper = WebScraper(executable_path="./scrapper/chromedriver.exe",download_path=os.getenv("SCRAPPED_LOCATION"))
+        url = f"https://jiji.com.et/search?query={item}"
+        scraper.navigate_to(url)
+
+        # Optional: Scroll down for a certain duration
+        scraper.scroll_down(5)  # Scroll down for 10 seconds
+
+        # Scrape data with the specified class name
+        scraper.scrape_data(class_name="masonry-item",item_name ="phone" )  # Replace with the actual class name
 
         # Store the Location of Scrapped Item in Streamlit session state
-        st.session_state.scrapped_data = "Items Obtained"
+        download_path = os.getenv("SCRAPPED_LOCATION")
+        st.session_state.scrapped_data = f"{download_path}/data.csv"
 if "scrapped_data" in st.session_state :
     # Display the Scrapped Data in an expandable text box
     with st.expander("View Obtained Information"):
-        st.text_area("Obtained Information", "cleaned_content", height=300)
+        df = pd.read_csv(st.session_state.scrapped_data)
+        st.dataframe(df)
+        # st.text_area("Obtained Information", "cleaned_content", height=300)
 
 print(st.session_state)
 
