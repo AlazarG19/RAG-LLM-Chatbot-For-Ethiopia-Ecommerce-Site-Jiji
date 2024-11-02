@@ -1,11 +1,13 @@
 import streamlit as st
 import time
 from scrapper.scrapper import WebScraper
+from llm.main import GeminiEmbeddingHandler
 import os
 from dotenv import load_dotenv
 import pandas as pd
 # Load environment variables from the home directory
 load_dotenv()
+
 
 # Setting up title and Necessary Inputs
 st.title("Jiji Web Scrapper LLM")
@@ -24,11 +26,21 @@ if st.button("Scrape Jiji"):
         scraper.scroll_down(5)  # Scroll down for 10 seconds
 
         # Scrape data with the specified class name
-        scraper.scrape_data(class_name="masonry-item",item_name ="phone" )  # Replace with the actual class name
+        scraper.scrape_data(class_name="masonry-item",item_name =item )  # Replace with the actual class name
 
         # Store the Location of Scrapped Item in Streamlit session state
         download_path = os.getenv("SCRAPPED_LOCATION")
         st.session_state.scrapped_data = f"{download_path}/data.csv"
+
+        handler = GeminiEmbeddingHandler(api_key=os.getenv("GOOGLE_API_KEY"))
+
+        # Example of importing data in chunks
+        chunks = handler.import_data_in_chunks(st.session_state.scrapped_data, 100)
+
+        # Generate embeddings for a chunk of documents
+        for chunk in chunks:
+            document_embeddings = handler.get_embeddings_for_documents(chunk["Full"].to_list())
+
 if "scrapped_data" in st.session_state :
     # Display the Scrapped Data in an expandable text box
     with st.expander("View Obtained Information"):
