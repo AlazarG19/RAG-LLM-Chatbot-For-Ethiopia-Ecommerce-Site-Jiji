@@ -1,0 +1,8 @@
+streamlit
+python-dotenv
+selenium
+selenium_stealth
+pandas
+langchain 
+langchain_ollama
+langchain_google_genai
