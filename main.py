@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from scrapper.scrapper import WebScraper
 from llm.main import GeminiEmbeddingHandler
+from vector_db.main import ProductDatabase
 import os
 from dotenv import load_dotenv
 import pandas as pd
@@ -40,8 +41,30 @@ if st.button("Scrape Jiji"):
         # Generate embeddings for a chunk of documents
         for chunk in chunks:
             document_embeddings = handler.get_embeddings_for_documents(chunk["Full"].to_list())
+        # Instantiate the ProductDatabase
+        db = ProductDatabase(host=os.getenv("HOST"),  # Use a string to specify the host
+            port=os.getenv("PORT"),
+            grpc_port=os.getenv("GRPC_PORT"),)
+        try:
+            # Connect to Weaviate
+            db.connect()
+            
+            # Create the Product collection if it doesn't exist
+            db.create_product_collection()
+            
+            # Add products with embeddings from chunks of data
+            db.add_products_with_embeddings(chunks, handler.get_embeddings_for_documents)
+            
+            # Batch insert products into the Weaviate database
+            db.batch_insert_products()
 
-if "scrapped_data" in st.session_state :
+        finally:
+            # Close the connection
+            db.close_connection()
+
+        st.session_state.finished_scrapping = True
+
+if "finished_scrapping" in st.session_state :
     # Display the Scrapped Data in an expandable text box
     with st.expander("View Obtained Information"):
         df = pd.read_csv(st.session_state.scrapped_data)
@@ -51,7 +74,7 @@ if "scrapped_data" in st.session_state :
 print(st.session_state)
 
 # Step 2: Ask Questions About the Scrapped Data
-if "scrapped_data" in st.session_state:
+if "finished_scrapping" in st.session_state:
     parse_description = st.text_area("Ask Your Question Down Below")
     show_parsing = True
 
@@ -60,7 +83,23 @@ if "scrapped_data" in st.session_state:
         if parse_description:
             if show_parsing:
                 st.write("Parsing the content...")
-            time.sleep(2)
-            show_parsing = False
-            st.write("parsed_result")
-            st.write("parsed_result2")
+                try:
+                    db = ProductDatabase(host=os.getenv("HOST"),  # Use a string to specify the host
+                            port=os.getenv("PORT"),
+                            grpc_port=os.getenv("GRPC_PORT"),)
+                    handler = GeminiEmbeddingHandler(api_key=os.getenv("GOOGLE_API_KEY"))
+                    # Connect to Weaviate
+                    db.connect()
+                    # Create the Product collection if it doesn't exist
+                    db.create_product_collection()
+                    # Query similar products based on a user query
+                    query_embedding = handler.get_embedding_for_query(parse_description)
+                    final_prompt = db.query_similar_products_prompt(parse_description, query_embedding, handler)
+                    # Use LLM to generate an answer
+                    answer = handler.llm.invoke(final_prompt)
+                    show_parsing = False
+                    st.write(answer.content)
+                    # return answer.content
+                finally:
+                    # Close the connection
+                    db.close_connection()

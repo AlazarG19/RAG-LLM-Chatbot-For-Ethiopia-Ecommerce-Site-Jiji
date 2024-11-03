@@ -6,3 +6,5 @@ pandas
 langchain 
 langchain_ollama
 langchain_google_genai
+weaviate
+weaviate-client
