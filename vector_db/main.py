@@ -84,7 +84,7 @@ class ProductDatabase:
             f"Item Name: {doc.properties['item_name']}, Description: {doc.properties['description']}, Price: {doc.properties['price']}, Location: {doc.properties['location']}"
             for doc in results.objects
         ])
-        final_prompt = f"Given the following products:\n{context}\nAnswer the user's question: {user_query}"
+        final_prompt = f"Given the following products:\n{context}\nAnswer the user's question: {user_query}. If the user asks any calculation do the calculation"
         
         return final_prompt
     def close_connection(self):
