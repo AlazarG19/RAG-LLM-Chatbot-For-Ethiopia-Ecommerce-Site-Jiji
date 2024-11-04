@@ -24,7 +24,7 @@ if st.button("Scrape Jiji"):
         scraper.navigate_to(url)
 
         # Optional: Scroll down for a certain duration
-        scraper.scroll_down(5)  # Scroll down for 10 seconds
+        scraper.scroll_down(15)  # Scroll down for 10 seconds
 
         # Scrape data with the specified class name
         scraper.scrape_data(class_name="masonry-item",item_name =item )  # Replace with the actual class name
