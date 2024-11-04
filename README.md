@@ -123,6 +123,6 @@ The first approach was to extract product name from query by spacy and bert but 
 Another limitaion was the obtained information is minimal since fetching detail of each object can consume a lot of time and resource.
 
 ## Demo
-![Demo 1](./screenshot/1.png)
-![Demo 2](./screenshot/2.png)
 ![Demo 3](./screenshot/3.png)
+![Demo 2](./screenshot/2.png)
+![Demo 1](./screenshot/1.png)
